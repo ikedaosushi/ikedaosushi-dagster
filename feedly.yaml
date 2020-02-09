@@ -1,0 +1,6 @@
+repository:
+    file: feedly.py
+    fn: etl_feedly_repository
+scheduler:
+    file: feedly.py
+    fn: feedly_schedules

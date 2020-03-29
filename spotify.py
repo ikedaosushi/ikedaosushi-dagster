@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 import spotipy
-import spotipy.util as util
+from spotipy import SpotifyOAuth
 from spotipy.oauth2 import SpotifyClientCredentials
 from dagster_cron import SystemCronScheduler
 from dagster import (
@@ -17,10 +17,8 @@ from dagster import (
     solid,
 )
 
-from env import FEEDLY_REFRESH_TOKEN, SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET
+from env import FEEDLY_REFRESH_TOKEN, SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_URI
 
-credentials = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
-spotify = spotipy.Spotify(client_credentials_manager=credentials)
 
 class MusicFeeder:
     scopes = " ".join([ 
@@ -52,7 +50,17 @@ class MusicFeeder:
         # feedly setup
         self.feedly_access_token = self._get_feedly_access_token()
         # spotify setup
-        self.token = util.prompt_for_user_token(self.spotify_username, self.scopes)
+        self.cache_path = Path(__file__).parent / f".cache-{self.spotify_username}"
+        self.sp_oauth = SpotifyOAuth(
+            SPOTIPY_CLIENT_ID,
+            SPOTIPY_CLIENT_SECRET,
+            SPOTIPY_REDIRECT_URI,
+            scope=self.scopes,
+            cache_path=self.cache_path,
+            username=self.spotify_username
+        )
+        self.token_info = self.sp_oauth.get_cached_token()
+        self.token = self.token_info["access_token"]
         self.spotify = spotipy.Spotify(auth=self.token)
         self.titles, self.tracks, self.current_tracks, self.tracks_to_add = None, None, None, None
         
@@ -90,7 +98,6 @@ class MusicFeeder:
         one_week_ago = datetime.today() - timedelta(days=7)
         tracks = []
         for title in titles:
-#             print("trying...", title)
             terms = re.findall("[a-zA-Z ]+", title)
             terms = [term.strip() for term in terms if term.strip()]
             terms = [term for term in terms if term not in self.stop_words]
@@ -145,7 +152,7 @@ def spotify_schedules():
     return [
         ScheduleDefinition(
             name='daily_spotify_batch',
-            cron_schedule='0 * * * *',
+            cron_schedule='* * * * *',
             pipeline_name='load_to_spotify_pipeline',
             environment_dict={},
         )

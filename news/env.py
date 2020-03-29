@@ -5,5 +5,6 @@ from dotenv import load_dotenv
 load_dotenv(Path.home()/".env")
 
 FEEDLY_REFRESH_TOKEN = os.environ['FEEDLY_REFRESH_TOKEN']
-SPOTIPY_CLIENT_ID = os.environ['SPOTIPY_CLIENT_ID']
-SPOTIPY_CLIENT_SECRET = os.environ['SPOTIPY_CLIENT_SECRET']
+ELASTIC_USERNAME = os.environ['ELASTIC_USERNAME']
+ELASTIC_PASSWORD = os.environ['ELASTIC_PASSWORD']
+ELASTIC_BASE_URL = os.environ['ELASTIC_BASE_URL']

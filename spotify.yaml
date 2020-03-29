@@ -1,0 +1,6 @@
+repository:
+    file: spotify.py
+    fn: etl_spotify_repository
+scheduler:
+    file: spotify.py
+    fn: spotify_schedules

@@ -138,7 +138,7 @@ def etl_feedly_repository():
 def feedly_schedules():
     return [
         ScheduleDefinition(
-            name='daily_batch',
+            name='daily_feedly_batch',
             cron_schedule='0 15 * * *',
             pipeline_name='load_to_firebase_pipeline',
             environment_dict={},

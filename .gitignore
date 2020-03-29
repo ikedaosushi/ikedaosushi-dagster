@@ -135,3 +135,6 @@ storage/
 
 # VSCode
 .vscode
+
+# Cache
+.cache-*

@@ -1,6 +1,7 @@
 import os
 import re
 import logging
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -18,6 +19,9 @@ from dagster import (
 )
 
 from env import FEEDLY_REFRESH_TOKEN, SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, SPOTIPY_REDIRECT_URI
+
+class FeedlyApiRequestError(Exception):
+    pass
 
 
 class MusicFeeder:
@@ -86,7 +90,11 @@ class MusicFeeder:
         
     def _request_to_feedly(self, url, params={}):
         headers = {'Authorization': f"OAuth {self.feedly_access_token}"}
-        return requests.get(url, headers=headers, params=params).json()
+        resp = requests.get(url, headers=headers, params=params)
+        if resp.status_code != 200:
+            raise FeedlyApiRequestError(json.dumps(resp.json()))
+
+        return resp.json()
         
     def _get_titles(self):
         url = f"https://cloud.feedly.com/v3/streams/contents?streamId=user/{self.feedly_username}/category/Music"
@@ -152,7 +160,7 @@ def spotify_schedules():
     return [
         ScheduleDefinition(
             name='daily_spotify_batch',
-            cron_schedule='* * * * *',
+            cron_schedule='0 * * * *',
             pipeline_name='load_to_spotify_pipeline',
             environment_dict={},
         )
